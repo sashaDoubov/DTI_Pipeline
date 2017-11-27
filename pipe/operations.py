@@ -4,16 +4,6 @@ import sys
 from lxml import etree
 import pudb
 
-def main():
-        bvec_bval_cont = BvecBvalContainer('/home/a2doubov/Documents/ADNI/109_S_4378_copy/Axial_DTI')
-        root_dir = bvec_bval_cont.get_xml_file_location()
-
-        bval_path = os.path.join(root_dir, 'orig.bval')
-        bvec_path = os.path.join(root_dir, 'orig.bvec')
-
-        bvec_bval_cont.write_bvals_bvecs(bval_path, bvec_path)
-        b0_files =  bvec_bval_cont.get_b0_file_names()
-
 class BvecBvalContainer:
     def __init__(self, dti_directory):
 
@@ -90,6 +80,14 @@ class BvecBvalContainer:
 
         return b0_list
 
+    def get_dti_file_names(self):
+        dti_list = []
+        for name, pair in self._name_to_dti_vals.iteritems():
+            if not pair.is_b0():
+                dti_list.append(name)
+                
+        return dti_list
+
 
     class BPair:
 
@@ -114,7 +112,4 @@ def make_dir_safe(path):
         else:
             return False
     return True
-
-if __name__ == '__main__':
-    main()
  
