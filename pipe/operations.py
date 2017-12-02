@@ -1,9 +1,13 @@
 import os
 import sys
 import pudb
+import logging
 import nipype.interfaces.fsl as fsl
 
 import pipe.structures as p_strcts
+
+logger = logging.getLogger('operations')
+logger.setLevel(logging.INFO)
 
 def get_bvec_bval_container(dti_directory):
     """
@@ -12,7 +16,6 @@ def get_bvec_bval_container(dti_directory):
 
     bvec_bval_cont = p_strcts.BvecBvalContainer(dti_directory)
     root_dir = bvec_bval_cont.get_xml_file_location()
-
 
     return bvec_bval_cont
 
@@ -23,9 +26,13 @@ def perform_b0_registration(b0_files, out_dir, force_run = True):
         @return - super b0 path
     """
     registered_dir = os.path.join(out_dir, 'registered_b0')
+    logger.info("Creating registered b0 directory {}".format(registered_dir))
+
     make_dir_safe(registered_dir)
 
     base_b0 = b0_files[0]
+
+    logger.debug("Using '{}' as baseline b0 file".format(base_b0))
 
     flirt = fsl.FLIRT()
     flirt.inputs.reference = base_b0
@@ -58,14 +65,19 @@ def perform_b0_registration(b0_files, out_dir, force_run = True):
     maths.inputs.out_file = b0_super
 
     if not os.path.isfile(maths.inputs.out_file) or force_run:
+        loger.info("Performing averaging of b0 files")
         maths.run()
 
     return b0_super
 
 def register_dwi_files_to_super_b0(dwi_files, super_b0 , out_dir, force_run = True):
+    """
+        Register list of dwi files to super b0 (both paths)
+    """
 
     processed_files = []
     registered_dir = os.path.join(out_dir, 'registered_dwi_files')
+    logger.info("Creaging dwi directory {}".format(registered_dir))
     make_dir_safe(registered_dir)
 
     flirt = fsl.FLIRT()
@@ -91,8 +103,12 @@ def register_dwi_files_to_super_b0(dwi_files, super_b0 , out_dir, force_run = Tr
 
 
 def skull_strip_dwi_files(dwi_files, out_dir, force_run = True):
+    """
+        Apply BET to a list of dwi files
+    """
 
     skull_strip_dir = os.path.join(out_dir, 'maskDWI')
+    logger.info("Creating skull strip directory '{}'".format(skull_strip_dir))
     make_dir_safe(skull_strip_dir)
     skull_stripped_files = []
 
